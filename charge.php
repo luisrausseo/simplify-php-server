@@ -60,7 +60,7 @@ try {
 	// 'token' => $token,
 	'description' => 'Test payment',
 	'currency' => $currency,
-	'customer' => $customer
+	'customer' => $customer->{'id'}
 );
 	
 	$payment = Simplify_Payment::createPayment($paymentPayload);
