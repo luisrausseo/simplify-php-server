@@ -57,7 +57,7 @@ try {
 	
 	$paymentPayload = array(
 	'amount' => $payment,
-	'token' => $token,
+	// 'token' => $token,
 	'description' => 'Test payment',
 	'currency' => $currency,
 	'customer' => $customer
