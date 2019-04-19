@@ -65,7 +65,6 @@ try {
 		'token' => $token,
 		'description' => 'Test payment',
 		'currency' => $currency
-		'customer' => $customer
 	);
 	$payment = Simplify_Payment::createPayment($paymentPayload);
 	if ($payment->paymentStatus == 'APPROVED') {
