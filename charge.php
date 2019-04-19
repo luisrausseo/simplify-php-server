@@ -50,8 +50,8 @@ $currency = isset($_POST["currency"]) ? $_POST["currency"] : 'USD';
 $response = array();
 try {
 	$customer = Simplify_Customer::createCustomer(array(
-        'email' => 'customerToken@mastercard.com',
-        'name' => 'Customer CustomerToken',
+        'email' => 'luis.rausseo@ttu.edu',
+        'name' => 'Daniel Rausseo',
 		'token' => $token
 	));
 	
