@@ -45,12 +45,12 @@ $token = $_POST['simplifyToken'];
 $payment = $_POST["amount"];
 $currency = isset($_POST["currency"]) ? $_POST["currency"] : 'USD';
 
-$paymentPayload = array(
-	'amount' => $payment,
-	'token' => $token,
-	'description' => 'Test payment',
-	'currency' => $currency
-);
+// $paymentPayload = array(
+	// 'amount' => $payment,
+	// 'token' => $token,
+	// 'description' => 'Test payment',
+	// 'currency' => $currency
+// );
 
 $response = array();
 try {
@@ -60,13 +60,13 @@ try {
         'name' => 'Test Customer',
         'reference' => 'Ref1'
 	));
-	// $paymentPayload = array(
-		// 'amount' => $payment,
-		// 'token' => $token,
-		// 'description' => 'Test payment',
-		// 'currency' => $currency
-		// 'customer' => $customer
-	// );
+	$paymentPayload = array(
+		'amount' => $payment,
+		'token' => $token,
+		'description' => 'Test payment',
+		'currency' => $currency
+		'customer' => $customer
+	);
 	$payment = Simplify_Payment::createPayment($paymentPayload);
 	if ($payment->paymentStatus == 'APPROVED') {
 		$response["id"] = $payment->{'id'};
