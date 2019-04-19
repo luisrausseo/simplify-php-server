@@ -43,25 +43,28 @@ if (!isset($_POST["amount"]) || !isset($_POST['simplifyToken'])) {
 
 $token = $_POST['simplifyToken'];
 $payment = $_POST["amount"];
+$customerID = $_POST["customer"];
 $currency = isset($_POST["currency"]) ? $_POST["currency"] : 'USD';
 
 
 
 $response = array();
 try {
-	$customer = Simplify_Customer::createCustomer(array(
-        'email' => 'luis.rausseo@ttu.edu',
-        'name' => 'Daniel Rausseo',
-		'token' => $token
-	));
+	$customer = Simplify_Customer::findCustomer($customerID);
+ 
+	$updates = array(
+		'token' => $token	 
+	);
+ 
+	$customer->setAll($updates);
+	$customer->updateCustomer();
 	
 	$paymentPayload = array(
-	'amount' => $payment,
-	// 'token' => $token,
-	'description' => 'Test payment',
-	'currency' => $currency,
-	'customer' => $customer->{'id'}
-);
+		'amount' => $payment,
+		'description' => 'Test payment',
+		'currency' => $currency,
+		'customer' => $customerID
+	);
 	
 	$payment = Simplify_Payment::createPayment($paymentPayload);
 	if ($payment->paymentStatus == 'APPROVED') {
