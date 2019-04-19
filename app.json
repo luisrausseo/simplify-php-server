@@ -10,7 +10,7 @@
     "website": "http://simplify.com",
     "repository": "https://github.com/simplifycom/simplify-php-server",
     "env": {
-        "SIMPLIFY_API_PUBLIC_KEY": "Paste your public API key here",
-        "SIMPLIFY_API_PRIVATE_KEY": "Paste your private API key here"
+        "SIMPLIFY_API_PUBLIC_KEY": "sbpb_ZWQ0M2Q4ZWMtMmJhOC00N2ZjLThjMGMtYjljYTJkMWM2NzFm",
+        "SIMPLIFY_API_PRIVATE_KEY": "MzKir12vVHP9OAG4mPUBfYAP/HQhFwuEuTBwnX/B6Q55YFFQL0ODSXAOkNtXTToq"
     }
 }
