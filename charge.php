@@ -51,8 +51,22 @@ $paymentPayload = array(
 	'description' => 'Test payment',
 	'currency' => $currency
 );
+
 $response = array();
 try {
+	$customer = Simplify_Customer::createCustomer(array(
+        'token' => $token,
+        'email' => 'customerToken@mastercard.com',
+        'name' => 'Test Customer',
+        'reference' => 'Ref1'
+	));
+	// $paymentPayload = array(
+		// 'amount' => $payment,
+		// 'token' => $token,
+		// 'description' => 'Test payment',
+		// 'currency' => $currency
+		// 'customer' => $customer
+	// );
 	$payment = Simplify_Payment::createPayment($paymentPayload);
 	if ($payment->paymentStatus == 'APPROVED') {
 		$response["id"] = $payment->{'id'};
