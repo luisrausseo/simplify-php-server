@@ -1,4 +1,4 @@
-Simplify Payment PHP Server [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+Simplify Payment PHP Server
 =========================
 This is an companion application to help developers start building mobile applications using Simplify Commerce by MasterCard to accept payments. For more information on how Simplify Commerce works, please go through the overview section of Tutorial at Simplify.com -  https://www.simplify.com/commerce/docs/tutorial/index
 
@@ -6,88 +6,91 @@ This is an companion application to help developers start building mobile applic
 
 * Register with Heroku (if you haven't done so already)
 * Register with [Simplify Commerce](https://www.simplify.com/commerce/login/signup) and you will need API Keys (Under Settings/API Keys) in the next step
-* Click on "Deploy to Heroku" button you see above
-* Go to index.php from the deployed app for next steps...
 
 ##Steps for integrating with iOS & Android apps
 
-### iOS:
 
-```objective-c
-    //Copy your new php server URL and append /charge.php, then replace YOUR_HEROKU_URL with that string
-    NSURL *url = [NSURL URLWithString:@"YOUR_HEROKU_URL"];
-
-    //Create a post request
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
-    request.HTTPMethod = @"POST";
-
-    //Set the request body data to an encoded string containing your token and the charge amount
-    NSString *bodyString = [NSString stringWithFormat:@"simplifyToken=%@&amount=%@", token, amount];
-    request.HTTPBody = [bodyString dataUsingEncoding:NSUTF8StringEncoding];
-
-    //Create a background data task for charging the card. Be sure to switch back to the application's main thread before adjusting the app's UI
-    NSURLSessionDataTask *chargeTask = [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-    if (error) {
-        //Handle data task error
-    }
-    else{
-        NSError *jsonError;
-        id object = [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonError];
-        if (jsonError) {
-            //Handle JSON error
-        }
-        else {
-            //Handle JSON response
-        }
-    }
-    }];
-    //Start the data task
-    [chargeTask resume];
-```
 
 ### Android:
 ```java
-    URL url = null;
-    HttpURLConnection con = null;
-    try {
-       URL url = new URL("http://simplifypay.herokuapp.com//charge.php");
-       HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        //add reuqest header
-        con.setRequestMethod("POST");
-        con.setRequestProperty("User-Agent", ""Mozilla/5.0");
-        con.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
+    final RequestQueue MyRequestQueue = Volley.newRequestQueue(this);
+	simplify = new Simplify();
+	simplify.setApiKey(publicAPIkey);
 
-        String urlParameters = "simplifyToken="+token.getId()+"&amount=1000";
+	mRef.addValueEventListener(new ValueEventListener() {
+		@Override
+		public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+			String number = dataSnapshot.child("payment").child(Integer.toString(cardSelected)).child("number").getValue(String.class);
+			String exp_month = dataSnapshot.child("payment").child(Integer.toString(cardSelected)).child("exp_month").getValue(String.class);
+			String exp_year = dataSnapshot.child("payment").child(Integer.toString(cardSelected)).child("exp_year").getValue(String.class);
+			String CVC = dataSnapshot.child("payment").child(Integer.toString(cardSelected)).child("CVV").getValue(String.class);
+			String zipcode = dataSnapshot.child("payment").child(Integer.toString(cardSelected)).child("zipcode").getValue(String.class);
+			final String payID = dataSnapshot.child("id").getValue(String.class);
 
-        // Send post request
-        con.setDoOutput(true);
-        DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-        wr.writeBytes(urlParameters);
-        wr.flush();
-        wr.close();
+			myCard = new Card()
+					.setNumber(number.replace(" ",""))
+					.setExpMonth(exp_month)
+					.setExpYear(exp_year.substring(exp_year.length() - 2))
+					.setCvc(CVC)
+					.setAddressZip(zipcode);
 
-        int responseCode = con.getResponseCode();
-        System.out.println("\nSending 'POST' request to URL : " + url);
-        System.out.println("Post parameters : " + urlParameters);
-        System.out.println("Response Code : " + responseCode);
+			paymentStatus = number.replace(" ","") + "|" + exp_month+ "|" + exp_year+ "|" + CVC+ "|" + zipcode;
 
-        BufferedReader in = new BufferedReader(
-                new InputStreamReader(con.getInputStream()));
-        String inputLine;
-        StringBuffer response = new StringBuffer();
+			// tokenize the card
+			simplify.createCardToken(myCard, new CardToken.Callback() {
+				@Override
+				public void onSuccess(final CardToken cardToken) {
+					try {
+						System.out.println(cardToken.getId());
+						String url = "http://ezservepayment.herokuapp.com/charge.php";
+						StringRequest MyStringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+							@Override
+							public void onResponse(String response) {
+								progressDialog.cancel();
+								try {
+									JSONObject jsonObject = new JSONObject(response);
+									Toast.makeText(PayForItems.this, response, Toast.LENGTH_LONG).show();
+									if (jsonObject.get("status").toString().equals("APPROVED")) {
+										startActivity(new Intent(PayForItems.this, CustomerMainActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+										//TODO: clear table and add it to customer's bills
+									}
+								} catch (JSONException e) {
+									//For debugging
+									Toast.makeText(PayForItems.this, e.getMessage(), Toast.LENGTH_LONG).show();
+								}
+							}
+						}, new Response.ErrorListener() { //Create an error listener to handle errors appropriately.
+							@Override
+							public void onErrorResponse(VolleyError error) {
+								//This code is executed if there is an error.
+							}
+						}) {
+							protected Map<String, String> getParams() {
+								Map<String, String> MyData = new HashMap<String, String>();
+								MyData.put("simplifyToken", cardToken.getId()); //Send the card token with the request
+								MyData.put("amount", String.valueOf(total*100)); //send the amount in cents
+								MyData.put("customer", payID); //send the customer id
+								return MyData;
+							}
+						};
 
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
-        }
-        in.close();
-        //print result
-        System.out.println(response.toString());
-        //
-    } catch (Exception e) {
-        e.printStackTrace();
-    } finally {
-        con.close();
-    }
+						MyRequestQueue.add(MyStringRequest);
+					} catch (Exception e) {
+						Toast.makeText(PayForItems.this, e.toString(), Toast.LENGTH_LONG).show();
+					}
+				}
+				@Override
+				public void onError(Throwable throwable) {
+					Toast.makeText(PayForItems.this, throwable.getMessage(), Toast.LENGTH_LONG).show();
+				}
+			});
+
+		}
+		@Override
+		public void onCancelled(@NonNull DatabaseError databaseError) {
+			paymentStatus = "Error 001";
+		}
+	});
 
 ```
 
