@@ -52,6 +52,7 @@ try {
 	$customer = Simplify_Customer::createCustomer(array(
         'email' => 'customerToken@mastercard.com',
         'name' => 'Customer CustomerToken',
+		'token' => $token
 	));
 	
 	$paymentPayload = array(
